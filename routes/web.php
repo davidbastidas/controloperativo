@@ -27,12 +27,12 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('admin/agenda', [
         'as' => 'agenda',
-        'uses' => 'AvisosController@index'
+        'uses' => 'AgendaController@index'
     ]);
 
     Route::get('admin/mapas', [
         'as' => 'mapas',
-        'uses' => 'AvisosController@visitaMapa'
+        'uses' => 'AgendaController@visitaMapa'
     ]);
 
     Route::match(['get', 'post'], '/admin',
@@ -71,47 +71,47 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::post('admin/avisos/upload', [
         'as' => 'admin.avisos.upload',
-        'uses' => 'AvisosController@subirAvisos'
+        'uses' => 'AgendaController@subirAvisos'
     ]);
 
-    Route::get('admin/asignar-avisos/index/{agenda}', 'AvisosController@listaAvisosIndex')->name('asignar.avisos');
+    Route::get('admin/asignar-avisos/index/{agenda}', 'AgendaController@listaAvisosIndex')->name('asignar.avisos');
 
     Route::post('admin/asignar-avisos', [
         'as' => 'admin.asignar.avisos',
-        'uses' => 'AvisosController@cargarAvisos'
+        'uses' => 'AgendaController@cargarAvisos'
     ]);
 
     Route::post('admin/asignarall', [
         'as' => 'admin.asignarall',
-        'uses' => 'AvisosController@asignarAllAvisos'
+        'uses' => 'AgendaController@asignarAllAvisos'
     ]);
 
     Route::post('admin/vaciar-carga', [
         'as' => 'admin.vaciar.carga',
-        'uses' => 'AvisosController@vaciarCarga'
+        'uses' => 'AgendaController@vaciarCarga'
     ]);
 
     Route::post('admin/agenda/save', [
         'as' => 'agenda.save',
-        'uses' => 'AvisosController@saveAgenda'
+        'uses' => 'AgendaController@saveAgenda'
     ]);
 
     Route::get('admin/agenda/delete/{agenda}', [
         'as' => 'agenda.delete',
-        'uses' => 'AvisosController@deleteAgenda'
+        'uses' => 'AgendaController@deleteAgenda'
     ]);
 
     Route::get('admin/avisos/editar/{aviso}', [
         'as' => 'aviso.editar',
-        'uses' => 'AvisosController@editarAviso'
+        'uses' => 'AgendaController@editarAviso'
     ]);
 
     Route::post('admin/avisos/save', [
         'as' => 'aviso.editar.save',
-        'uses' => 'AvisosController@saveAviso'
+        'uses' => 'AgendaController@saveAviso'
     ]);
 
-    Route::get('admin/getAvisos', 'AvisosController@getAvisos');
+    Route::get('admin/getAvisos', 'AgendaController@getAvisos');
 
     Route::post('admin/dashboard/getAvancePorGestor', [
         'as' => 'admin.dashboard.getAvancePorGestor',
@@ -130,18 +130,16 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('admin/avisos/delete/{aviso}', [
         'as' => 'aviso.eliminar',
-        'uses' => 'AvisosController@deleteAviso'
+        'uses' => 'AgendaController@deleteAviso'
     ]);
 
     Route::post('admin/avisos/delete/all', [
         'as' => 'aviso.eliminar.all',
-        'uses' => 'AvisosController@deleteAvisoPorSeleccion'
+        'uses' => 'AgendaController@deleteAvisoPorSeleccion'
     ]);
 
     Route::post('admin/avisos/getPointMapVisita', [
         'as' => 'admin.avisos.getPointMapVisita',
-        'uses' => 'AvisosController@getPointMapVisita'
+        'uses' => 'AgendaController@getPointMapVisita'
     ]);
 });
-
-

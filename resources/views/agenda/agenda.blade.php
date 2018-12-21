@@ -38,11 +38,11 @@
                                                            class="form-control" name="fecha">
                                                 </div>
                                                 <div class="col-md-5">
-                                                    <label>Delegacion</label>
+                                                    <label>Tipo Servicio</label>
                                                     <select class="form-control" name="delegacion">
-                                                        @foreach($delegaciones as $del)
+                                                        @foreach($tiposLectura as $tl)
                                                             <option
-                                                                value="{{$del->id}}">{{$del->nombre}}</option>
+                                                                value="{{$tl->id}}">{{$tl->nombre}}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -78,7 +78,7 @@
                             <thead>
                             <tr>
                                 <th scope="col">Agenda</th>
-                                <th scope="col">Delegacion</th>
+                                <th scope="col">Tipo Servicio</th>
                                 <th scope="col">Responsable</th>
                                 <th scope="col">Por Asignar</th>
                                 <th scope="col">Pend.</th>
@@ -91,10 +91,10 @@
                                 <tr>
                                     <td>{{$agenda->fecha}}</td>
                                     <td>
-                                        @if($agenda->delegacion == 1)
-                                            ATLANTICO NORTE
+                                        @if($agenda->tipo_lectura_id == 1)
+                                            AUDITORIA
                                         @else
-                                            ATLANTICO SUR
+                                            PCI
                                         @endif
                                     </td>
                                     <td>{{$agenda->usuario}}</td>

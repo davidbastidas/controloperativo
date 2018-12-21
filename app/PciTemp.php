@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class AuditoriaTemp extends Model
+class PciTemp extends Model
 {
     protected $table = "pci_temp";
 }

@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\AdminTable;
 use App\Agenda;
 use App\Anomalias;
-use App\Avisos;
-use App\AvisosTemp;
-use App\Delegacion;
-use App\EntidadesPagos;
+use App\Auditoria;
+use App\AuditoriaTemp;
+use App\Pci;
+use App\PciTemp;
+use App\TipoLectura;
 use App\ObservacionesRapidas;
-use App\Resultados;
 use App\User;
 use App\Usuarios;
 use Carbon\Carbon;
@@ -24,13 +24,12 @@ use Illuminate\Support\Facades\Input;
 use Maatwebsite\Excel\Facades\Excel;
 
 
-class AvisosController extends Controller
+class AgendaController extends Controller
 {
 
     public function index()
     {
-        $totalAvisos = Avisos::all()->count();
-        $delegaciones = Delegacion::all();
+        $tiposLectura = TipoLectura::all();
 
         $perPage = 6;
         $page = Input::get('page');
@@ -50,9 +49,18 @@ class AvisosController extends Controller
 
             $user = User::where('id', $agenda->admin_id)->first()->name;
 
-            $pendientes = Avisos::where('estado', 1)->where('agenda_id', $agenda->id)->count();
-            $realizados = Avisos::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
-            $cargasPendientes = AvisosTemp::where('agenda_id', $agenda->id)->count();
+            $pendientes = 0;
+            $realizados = 0;
+            $cargasPendientes = 0;
+            if($agenda->tipo_lectura_id == 1){
+              $pendientes = Auditoria::where('estado', 1)->where('agenda_id', $agenda->id)->count();
+              $realizados = Auditoria::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
+              $cargasPendientes = AuditoriaTemp::where('agenda_id', $agenda->id)->count();
+            } elseif($agenda->tipo_lectura_id == 2){
+              $pendientes = Pci::where('estado', 1)->where('agenda_id', $agenda->id)->count();
+              $realizados = Pci::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
+              $cargasPendientes = PciTemp::where('agenda_id', $agenda->id)->count();
+            }
 
             $flag = false;
 
@@ -67,7 +75,7 @@ class AvisosController extends Controller
                 'id' => $agenda->id,
                 'codigo' => $agenda->codigo,
                 'fecha' => $agenda->fecha,
-                'delegacion' => $agenda->delegacion_id,
+                'tipo_lectura_id' => $agenda->tipo_lectura_id,
                 'usuario' => $user,
                 'pendientes' => $pendientes,
                 'realizados' => $realizados,
@@ -83,12 +91,10 @@ class AvisosController extends Controller
             'pageName' => $pageName,
         ]);
 
-        return view('agenda.agenda',
-            [
-                'totalAvisos' => $totalAvisos,
-                'delegaciones' => $delegaciones,
-                'agendas' => $posts
-            ])->withPosts($posts);
+        return view('agenda.agenda',[
+          'tiposLectura' => $tiposLectura,
+          'agendas' => $posts
+        ])->withPosts($posts);
     }
 
     public function saveAgenda(Request $request)
