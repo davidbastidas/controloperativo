@@ -126,8 +126,8 @@ class ApiController extends Controller
       array_push($arrayAnomalias, (object) array(
         'id' => $anomalia->id,
         'nombre' => $anomalia->nombre,
-        'codigo' => $anomalia->codigo
-        'lectura' => $anomalia->lectura
+        'codigo' => $anomalia->codigo,
+        'lectura' => $anomalia->lectura,
         'foto' => $anomalia->foto
       ));
     }
