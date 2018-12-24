@@ -19,22 +19,17 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        'admin/getIndicadores',
-        'admin/avisos/upload',
-        'admin/excel/upload',
-        'admin/excel/download',
-        'admin/download-avisos',
-        'admin/carga-avisos',
-        'admin/asignar-avisos',
-        'admin/vaciar-carga',
-        'admin/getAvisos',
+        'admin/agenda/upload',
         'admin/agenda/download',
-        'admin/asignarall',
-        'admin/avisos/save',
+        'admin/agenda/asignar',
+        'admin/agenda/asignarall',
+        'admin/agenda/vaciar-carga',
+        'admin/agenda/save',
+        'admin/agenda/servicio/save',
+        'admin/agenda/servicio/delete/all',
         'admin/dashboard/getAvancePorGestor',
         'admin/dashboard/getAvanceDiario',
         'admin/dashboard/getPointMapGestores',
-        'admin/avisos/getPointMapVisita',
-        'admin/avisos/delete/all',
+        'admin/servicios/getPointMapVisita',
     ];
 }

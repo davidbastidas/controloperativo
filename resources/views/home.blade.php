@@ -10,19 +10,19 @@
             <label class="sr-only">Fecha</label>
             <input id="fecha" class="form-control mb-2 mr-sm-2" type="date" id="fecha" required/>
 
-            <label class="sr-only">Gestor</label>
+            <label class="sr-only">Lector</label>
             <select id="gestor_filtro" class="form-control mb-2 mr-sm-2">
-              <option value="0">[Todos los Gestores]</option>
+              <option value="0">[Todos los Lectores]</option>
               @foreach ($usuarios as $usuario)
                 <option value="{{$usuario->id}}">{{$usuario->nombre}}</option>
               @endforeach
             </select>
 
-            <label class="sr-only">Delegacion</label>
+            <label class="sr-only">Tipo de Servicio</label>
             <select id="delegacion_filtro" class="form-control mb-2 mr-sm-2">
-                <option value="0">[Todas las Delegaciones]</option>
-                @foreach ($delegaciones as $delegacion)
-                  <option value="{{$delegacion->id}}">{{$delegacion->nombre}}</option>
+                <option value="0">[Todos los Tipo de Servicio]</option>
+                @foreach ($tiposLectura as $tp)
+                  <option value="{{$tp->id}}">{{$tp->nombre}}</option>
                 @endforeach
             </select>
 
@@ -86,7 +86,7 @@
     <div class="col-md-12 grid-margin stretch-card">
         <div class="card">
             <div class="card-body">
-              <h2 class="card-title text-primary mb-1">Avance por Gestor</h2>
+              <h2 class="card-title text-primary mb-1">Avance por Lector</h2>
               <div class="square-box-loader" id="dash-loader-avance-gestor">
                 <div class="square-box-loader-container">
                   <div class="square-box-loader-corner-top"></div>
@@ -100,7 +100,7 @@
                     <thead>
                       <tr>
                         <th style="width: 25% !important;">
-                          Gestor
+                          Lector
                         </th>
                         <th style="width: 20% !important;">
                           Realiz.

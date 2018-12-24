@@ -62,14 +62,6 @@
                         </div>
 
                         <div class="col-md-4"></div>
-                        <div class="col-md-4" style="top: -20px; display: none">
-                            <center><p class="mb-2">Total Avisos</p>
-                                <p class="display-3 mb-4 font-weight-light"><span
-                                        class="mdi mdi-bell" style="color:#35abde;">
-                                                        {$totalAvisos}}
-                                                    </span></p>
-                            </center>
-                        </div>
                     </div>
                     <br>
                     <br>
@@ -102,13 +94,13 @@
                                     <td>{{$agenda->pendientes}}</td>
                                     <td>{{$agenda->realizados}}</td>
                                     <td>
-                                        <form action="{{route('asignar.avisos', ['agenda' => $agenda->id])}}">
+                                        <form action="{{route('agenda.detalle', ['agenda' => $agenda->id])}}">
                                             <button style="margin-bottom: 8px"
                                                     class="btn-block btn btn-outline-primary">
                                                 Abrir <i class="mdi mdi-folder-open"></i>
                                             </button>
                                         </form>
-                                        <form action="{{route('admin.avisos.subir', ['agenda' => $agenda->id])}}">
+                                        <form action="{{route('agenda.subir', ['agenda' => $agenda->id])}}">
                                             <button style="margin-bottom: 8px" class="btn btn-block btn-outline-info">
                                                 Cargar <i class="mdi mdi-upload"></i>
                                             </button>
@@ -121,7 +113,7 @@
                                                 </button>
                                             </form>
                                         @endif
-                                        <form method="POST" action="{{route('admin.agenda.download')}}">
+                                        <form method="POST" action="{{route('agenda.download')}}">
                                             <input type="hidden" name="agenda" value="{{$agenda->id}}">
                                             <button style="margin-bottom: -8px"
                                                     class="btn btn-block btn-outline-success">

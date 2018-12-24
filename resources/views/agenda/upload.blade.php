@@ -21,30 +21,32 @@
                             </center>
                         </div>
                         <div class="col-md-4" style="top: -20px;">
-                            <center><p class="mb-2">Delegacion</p>
+                            <center><p class="mb-2">Tipo de Servicio</p>
                                 <p class="display-3 mb-4 font-weight-light">
                                     <span
                                         class="mdi mdi-map-marke littler little" style="color:#35abde;">
-                                                        @if($agenda->delegacion_id == 1)
-                                            ATLANTICO NORTE
+                                        @if($agenda->tipo_lectura_id == 1)
+                                            AUDITORIA
                                         @else
-                                            ATLANTICO SUR
+                                            PCI
                                         @endif
-                                                    </span></p>
+                                    </span>
+                                </p>
                             </center>
                         </div>
                         <div class="col-md-4" style="top: -20px;">
                             <center><p class="mb-2">Fecha</p>
-                                <p class="display-3 mb-4 font-weight-light"><span
-                                        class="mdi mdi-calendar little" style="color:#35abde;">
-                                                        {{$fecha}}
-                                                    </span></p>
+                                <p class="display-3 mb-4 font-weight-light">
+                                  <span class="mdi mdi-calendar little" style="color:#35abde;">
+                                      {{$fecha}}
+                                  </span>
+                                </p>
                             </center>
                         </div>
                     </div>
 
                     <br>
-                    <form method="post" action="{{route('admin.avisos.upload')}}"
+                    <form method="post" action="{{route('agenda.upload')}}"
                           enctype="multipart/form-data" style="padding: 0">
                         <input type="hidden" name="agenda" value="{{$agenda->id}}">
                         <div class="row">

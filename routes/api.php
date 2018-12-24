@@ -18,5 +18,6 @@ Route::group([
 ], function () {
 });
 Route::post('login', 'ApiController@login');
-Route::post('avisos/getVisitas', 'ApiController@getAvisos');
-Route::post('avisos/actualizarVisita', 'ApiController@actualizarAviso');
+Route::post('servicios/getServicios', 'ApiController@getServicios');
+Route::post('servicios/actualizarAuditoria', 'ApiController@actualizarAuditoria');
+Route::post('servicios/actualizarPci', 'ApiController@actualizarPci');

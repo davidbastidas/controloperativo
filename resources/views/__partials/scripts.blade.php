@@ -43,7 +43,7 @@
         }
       });
       $('#borrar_masivo').click(function () {
-        var form = $('<form id="form_temp_delete" action="{{route('aviso.eliminar.all')}}" method="post"></form>');
+        var form = $('<form id="form_temp_delete" action="{{route('servicio.eliminar.all')}}" method="post"></form>');
         form.append('<input type="hidden" name="agenda_id" value="'+$('#agenda_id').val()+'">');
         $('.check-avisos').each(function () {
           if ( $(this).is(':checked') ){
@@ -230,7 +230,7 @@
         id: 'mapbox.streets'
       }).addTo(mapVisitas);
       var request = $.ajax({
-        url: "{{route('admin.avisos.getPointMapVisita')}}",
+        url: "{{route('admin.servicios.getPointMapVisita')}}",
         method: "POST",
         data: {
             'fecha': fecha,

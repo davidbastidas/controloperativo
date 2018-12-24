@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Usuarios;
-use App\Delegacion;
+use App\TipoLectura;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -25,11 +25,15 @@ class HomeController extends Controller
      */
     public function index()
     {
-      $usuarios = Usuarios::orderBy('nombre')->get();
-      $delegaciones = Delegacion::all();
-      return view('home', [
-          'usuarios' => $usuarios,
-          'delegaciones' => $delegaciones,
-      ]);
+      if (isset(\Illuminate\Support\Facades\Auth::user()->id)){
+        $usuarios = Usuarios::orderBy('nombre')->get();
+        $tiposLectura = TipoLectura::all();
+        return view('home', [
+            'usuarios' => $usuarios,
+            'tiposLectura' => $tiposLectura,
+        ]);
+      }else{
+          return view('auth.login');
+      }
     }
 }

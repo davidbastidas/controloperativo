@@ -5,13 +5,13 @@
         <div class="col-lg-12 grid-margin">
             <div class="card">
                 <div class="card-body">
-                    @if(count($gestores) > 0)
+                    @if(count($lectores) > 0)
                         <div class="row">
                             <div class="col-md-10">
-                                <h4>Asignar Avisos {{$agendaModel->codigo}} de {{$agendaModel->fecha}}</h4>
+                                <h4>Asignar Servicios {{$agendaModel->codigo}} de {{$agendaModel->fecha}}</h4>
                             </div>
                             <div class="col-md-2">
-                                <form action="{{route('admin.vaciar.carga')}}" method="post">
+                                <form action="{{route('agenda.vaciarcarga')}}" method="post">
                                     {{ csrf_field() }}
                                     <input type="hidden" name="agenda" value="{{$agenda}}">
                                     <button class="btn btn-danger" type="submit">Vaciar Carga</button>
@@ -26,18 +26,18 @@
                         @endif
                         <div class="row">
                             <div class="col-md-6">
-                                <form action="{{route('admin.asignar.avisos')}}" method="post">
+                                <form action="{{route('agenda.asignar')}}" method="post">
                                     <input type="hidden" name="agenda" value="{{$agenda}}">
                                     <div class="form-group">
-                                        <label>Gestor Cargado</label>
+                                        <label>Lector Cargado</label>
                                         <select name="gestor" class="form-control">
-                                            @foreach($gestores as $gestor)
-                                                <option value="{{$gestor->gestor}}">{{$gestor->gestor}}</option>
+                                            @foreach($lectores as $usu)
+                                                <option value="{{$usu->lector}}">{{$usu->lector}}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label>Gestor a Asignar</label>
+                                        <label>Lector a Asignar</label>
                                         <select name="user" class="form-control">
                                             @foreach($usuarios as $user)
                                                 <option value="{{$user->id}}">{{$user->nombre}}</option>
@@ -49,7 +49,7 @@
                                     </button>
                                 </form>
                                 <br>
-                                <form action="{{route('admin.asignarall')}}" method="post">
+                                <form action="{{route('agenda.asignarall')}}" method="post">
                                     <input type="hidden" name="agenda" value="{{$agenda}}">
                                     <button class="btn btn-outline-info" type="submit">Asignar Todo</button>
                                 </form>
@@ -60,7 +60,7 @@
 
                     <div class="row">
                         <div class="col-md-10">
-                            <h4>Lista de Avisos {{$agendaModel->codigo}} de {{$agendaModel->fecha}}</h4>
+                            <h4>Lista de Servicios {{$agendaModel->codigo}} de {{$agendaModel->fecha}}</h4>
                         </div>
                     </div>
                     @php
@@ -135,14 +135,14 @@
 
                     <div class="row">
                         <div class="col-md-12">
-                            <form class="form-inline" action="{{route('asignar.avisos',['agenda' => $agenda])}}"
+                            <form class="form-inline" action="{{route('agenda.asignar',['agenda' => $agenda])}}"
                                   method="get">
-                                <label class="sr-only">Gestor</label>
+                                <label class="sr-only">Lector</label>
                                 <select name="gestor_filtro" class="form-control mb-2 mr-sm-2">
-                                    <option value="0">[Todos los Gestores]</option>
-                                    @foreach($gestoresAsignados as $gestor)
+                                    <option value="0">[Todos los Lectores]</option>
+                                    @foreach($lectoresAsignados as $gestor)
                                         @foreach ($usuarios as $usuario)
-                                            @if ($usuario->id == $gestor->gestor_id)
+                                            @if ($usuario->id == $gestor->lector_id)
                                                 @if ($gestor_filtro == $usuario->id)
                                                     <option value="{{$usuario->id}}"
                                                             selected>{{$usuario->nombre}}</option>
@@ -162,9 +162,12 @@
                                     <option value="3" @if ($estados_filtro == 3) selected @endif>MODIFICADOS</option>
                                 </select>
 
-                                <label class="sr-only">NIC</label>
-                                <input type="text" class="form-control mb-2 mr-sm-2" name="nic_filtro" placeholder="NIC"
-                                       value="{{$nic_filtro}}">
+                                @if ($agendaModel->tipo_lectura_id == 1)
+                                  <label class="sr-only">NIC</label>
+                                  <input type="text" class="form-control mb-2 mr-sm-2" name="nic_filtro" placeholder="NIC"
+                                         value="{{$nic_filtro}}">
+                                @endif
+
 
                                 <label class="sr-only">MEDIDOR</label>
                                 <input type="text" class="form-control mb-2 mr-sm-2" name="medidor_filtro"
@@ -190,7 +193,11 @@
                                         </th>
                                         <th style="width: 20%;">Gestor</th>
                                         <th style="width: 15%;">Barrio</th>
-                                        <th style="width: 10%;">NIC</th>
+                                        @if ($agendaModel->tipo_lectura_id == 1)
+                                          <th style="width: 10%;">NIC</th>
+                                        @elseif ($agendaModel->tipo_lectura_id == 2)
+                                          <th style="width: 10%;">MEDIDOR</th>
+                                        @endif
                                         <th style="width: 10%;">Result.</th>
                                         <th style="width: 10%;">Accion</th>
                                     </tr>
@@ -199,33 +206,37 @@
                                     @php
                                         $count = 1;
                                     @endphp
-                                    @foreach ($avisos as $aviso)
+                                    @foreach ($servicios as $serv)
                                         <tr>
                                             <td>
-                                                @if ($aviso->estado == 1)
+                                                @if ($serv->estado == 1)
                                                     <input type="checkbox" class="check-avisos" name="avisos[]"
-                                                           value="{{ $aviso->id }}">
+                                                           value="{{ $serv->id }}">
                                                 @else
                                                     {{$count++}}
                                                 @endif
                                             </td>
-                                            <td>{{ $aviso->usuario->nombre }}</td>
-                                            <td>{{ $aviso->barrio }}</td>
-                                            <td>{{ $aviso->nic }}</td>
+                                            <td>{{ $serv->usuario->nombre }}</td>
+                                            <td>{{ $serv->barrio }}</td>
+                                            @if ($agendaModel->tipo_lectura_id == 1)
+                                              <td>{{ $serv->nic }}</td>
+                                            @elseif ($agendaModel->tipo_lectura_id == 2)
+                                              <td>{{ $serv->medidor }}</td>
+                                            @endif
                                             <td>
-                                                @if (isset($aviso->resultado->nombre))
-                                                    {{ $aviso->resultado->nombre }}
+                                                @if (isset($serv->resultado->nombre))
+                                                    {{ $serv->resultado->nombre }}
                                                 @endif
                                             </td>
                                             <td>
-                                                <form action="{{route('aviso.editar', ['aviso' => $aviso->id])}}">
+                                                <form action="{{route('servicio.editar', ['agenda' => $agendaModel->id, 'servicio' => $serv->id])}}">
                                                     <button style="margin-bottom: 8px"
                                                             class="btn-sm btn btn-outline-primary">
                                                         Ver <i class="mdi mdi-pencil"></i>
                                                     </button>
                                                 </form>
-                                                @if ($aviso->estado == 1)
-                                                    <form action="{{route('aviso.eliminar', ['aviso' => $aviso->id])}}">
+                                                @if ($serv->estado == 1)
+                                                    <form action="{{route('servicio.eliminar', ['agenda' => $agendaModel->id, 'servicio' => $serv->id])}}">
                                                         <button style="margin-bottom: 8px"
                                                                 class="btn-sm btn btn-outline-danger">
                                                             Eliminar <i class="mdi mdi-delete"></i>
@@ -238,7 +249,7 @@
                                     </tbody>
                                 </table>
                                 <br>
-                                {{ $avisos->appends([])->links() }}
+                                {{ $servicios->appends([])->links() }}
                             </div>
                         </div>
                     </div>

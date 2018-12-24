@@ -26,7 +26,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AgendaController extends Controller
 {
-
     public function index()
     {
         $tiposLectura = TipoLectura::all();
@@ -70,6 +69,9 @@ class AgendaController extends Controller
             if ($cargasPendientes > 0){
                 $flag = true;
             }
+            if ($realizados > 0){
+                $flag = true;
+            }
 
             array_push($array, (object)array(
                 'id' => $agenda->id,
@@ -102,7 +104,7 @@ class AgendaController extends Controller
 
         $agenda = new Agenda();
         $agenda->fecha = $request->fecha;
-        $agenda->delegacion_id = $request->delegacion;
+        $agenda->tipo_lectura_id = $request->delegacion;
         $agenda->admin_id = Auth::user()->id;
 
         $agenda->save();
@@ -116,10 +118,19 @@ class AgendaController extends Controller
         return redirect()->route('agenda');
     }
 
-    public function subirAvisos(Request $request)
+    public function viewUpload($id_agenda)
+    {
+        $agenda = Agenda::where('id', $id_agenda)->first();
+
+        $fecha = explode(' ', $agenda->fecha)[0];
+
+        return view('agenda.upload', ['agenda' => $agenda, 'fecha' =>$fecha]);
+    }
+
+    public function subirServicios(Request $request)
     {
         $archivo = $request->file;
-        $agenda = $request->agenda;
+        $agenda = Agenda::where('id', $request->agenda)->first();
         $results = Excel::load($archivo)->all()->toArray();
         foreach ($results as $row) {
             foreach ($row as $x => $x_value) {
@@ -129,46 +140,66 @@ class AgendaController extends Controller
                     $base[$count] = $y_value;
                     $count++;
                 }
-                $aviso = new AvisosTemp();
-                $aviso->campana = $base[0];
-                $aviso->campana2 = $base[1];
-
-                $aviso->fecha_entrega = $base[2]->format('Y-m-d');
-                $aviso->tipo_visita = $base[3];
-                $aviso->municipio = $base[4];
-                $aviso->localidad = $base[5];
-                $aviso->barrio = $base[6];
-                $aviso->direccion = $base[7];
-                $aviso->cliente = $base[8];
-                $aviso->deuda = $base[9];
-                $aviso->factura_vencida = $base[10];
-                $aviso->nic = $base[11];
-                $aviso->nis = $base[12];
-                $aviso->medidor = $base[13];
-                $aviso->gestor = $base[14];
-                $aviso->supervisor = $base[15];
-                $aviso->tarifa = $base[17];
-                $aviso->compromiso = $base[18]->format('Y-m-d');
-                $aviso->avisos = $base[19];
-                $aviso->admin_id = Auth::user()->id;
-                $aviso->agenda_id = $agenda;
-                $aviso->save();
+                if($agenda->tipo_lectura_id == 1){
+                  $servicio = new AuditoriaTemp();
+                  $servicio->barrio = $base[1];
+                  $servicio->localidad = $base[2];
+                  $servicio->cliente = $base[3];
+                  $servicio->direccion = $base[4];
+                  $servicio->nic = $base[5];
+                  $servicio->ruta = $base[6];
+                  $servicio->itin = $base[7];
+                  $servicio->medidor = $base[8];
+                  $servicio->motivo = $base[9];
+                  $servicio->nis = $base[10];
+                  $servicio->lector = $base[11];
+                  $servicio->an_anterior = $base[12];
+                  $servicio->lectura_anterior = $base[13];
+                  $servicio->admin_id = Auth::user()->id;
+                  $servicio->agenda_id = $agenda->id;
+                  $servicio->save();
+                }elseif($agenda->tipo_lectura_id == 2){
+                  $servicio = new PciTemp();
+                  $servicio->ct = $base[1];
+                  $servicio->mt = $base[2];
+                  $servicio->direccion = $base[3];
+                  $servicio->medidor = $base[4];
+                  $servicio->medidor_anterior = $base[5];
+                  $servicio->medidor_posterior = $base[6];
+                  $servicio->barrio = $base[7];
+                  $servicio->municipio = $base[8];
+                  $servicio->codigo = $base[9];
+                  $servicio->unicom = $base[10];
+                  $servicio->ruta = $base[11];
+                  $servicio->itin = $base[12];
+                  $servicio->lector = $base[13];
+                  $servicio->an_anterior = $base[14];
+                  $servicio->lectura_anterior = $base[15];
+                  $servicio->fecha_entrega = $base[16]->format('Y-m-d');
+                  $servicio->admin_id = Auth::user()->id;
+                  $servicio->agenda_id = $agenda->id;
+                  $servicio->save();
+                }
             }
         }
         return \Redirect::route('agenda');
     }
 
-    //Asignar Avisos INDEX
-    public function listaAvisosIndex($agenda)
+    public function listar($agenda)
     {
-        $gestor_filtro = 0;
+        $lector_filtro = 0;
         $estados_filtro = 0;
         $nic_filtro = '';
         $medidor_filtro = '';
 
-        $gestores = AvisosTemp::select('gestor')->where('agenda_id', $agenda)->groupBy('gestor')->get();
-        $usuarios = Usuarios::all();
         $agendaModel = Agenda::find($agenda);
+        $lectores = null;
+        if($agendaModel->tipo_lectura_id == 1){
+          $lectores = AuditoriaTemp::select('lector')->where('agenda_id', $agenda)->groupBy('lector')->get();
+        }elseif($agendaModel->tipo_lectura_id == 2){
+          $lectores = PciTemp::select('lector')->where('agenda_id', $agenda)->groupBy('lector')->get();
+        }
+        $usuarios = Usuarios::all();
 
         $perPage = 150;
         $page = Input::get('page');
@@ -176,251 +207,342 @@ class AgendaController extends Controller
         $page = Paginator::resolveCurrentPage($pageName);
         $offSet = ($page * $perPage) - $perPage;
 
-        $avisos = Avisos::where('agenda_id', $agenda);
-        $avisosAux1 = Avisos::where('agenda_id', $agenda);
-        $avisosAux2 = Avisos::where('agenda_id', $agenda);
+        $servicios = null;
+        $serviciosAux1 = null;
+        $serviciosAux2 = null;
+        if($agendaModel->tipo_lectura_id == 1){
+          $servicios = Auditoria::where('agenda_id', $agenda);
+          $serviciosAux1 = Auditoria::where('agenda_id', $agenda);
+          $serviciosAux2 = Auditoria::where('agenda_id', $agenda);
+        }elseif($agendaModel->tipo_lectura_id == 2){
+          $servicios = Pci::where('agenda_id', $agenda);
+          $serviciosAux1 = Pci::where('agenda_id', $agenda);
+          $serviciosAux2 = Pci::where('agenda_id', $agenda);
+        }
+
         if(Input::has('gestor_filtro')){
-            $gestor_filtro = Input::get('gestor_filtro');
-            if($gestor_filtro != 0){
-                $avisos = $avisos->where('gestor_id', $gestor_filtro);
-                $avisosAux1 = $avisosAux1->where('gestor_id', $gestor_filtro);
-                $avisosAux2 = $avisosAux2->where('gestor_id', $gestor_filtro);
+            $lector_filtro = Input::get('gestor_filtro');
+            if($lector_filtro != 0){
+                $servicios = $servicios->where('lector_id', $lector_filtro);
+                $serviciosAux1 = $serviciosAux1->where('lector_id', $lector_filtro);
+                $serviciosAux2 = $serviciosAux2->where('lector_id', $lector_filtro);
             }
         }
         if(Input::has('estados_filtro')){
             $estados_filtro = Input::get('estados_filtro');
             if($estados_filtro != 0){
-                $avisos = $avisos->where('estado', $estados_filtro);
-                $avisosAux1 = $avisosAux1->where('estado', $estados_filtro);
-                $avisosAux2 = $avisosAux2->where('estado', $estados_filtro);
+                $servicios = $servicios->where('estado', $estados_filtro);
+                $serviciosAux1 = $serviciosAux1->where('estado', $estados_filtro);
+                $serviciosAux2 = $serviciosAux2->where('estado', $estados_filtro);
             }
         }
         if(Input::has('nic_filtro')){
             $nic_filtro = Input::get('nic_filtro');
             if($nic_filtro != 0){
-                $avisos = $avisos->where('nic', $nic_filtro);
-                $avisosAux1 = $avisosAux1->where('nic', $nic_filtro);
-                $avisosAux2 = $avisosAux2->where('nic', $nic_filtro);
+                $servicios = $servicios->where('nic', $nic_filtro);
+                $serviciosAux1 = $serviciosAux1->where('nic', $nic_filtro);
+                $serviciosAux2 = $serviciosAux2->where('nic', $nic_filtro);
             }
         }
         if(Input::has('medidor_filtro')){
             $medidor_filtro = Input::get('medidor_filtro');
             if($medidor_filtro != 0){
-                $avisos = $avisos->where('medidor', DB::raw("'$medidor_filtro'"));
-                $avisosAux1 = $avisosAux1->where('medidor', DB::raw("'$medidor_filtro'"));
-                $avisosAux2 = $avisosAux2->where('medidor', DB::raw("'$medidor_filtro'"));
+                $servicios = $servicios->where('medidor', DB::raw("'$medidor_filtro'"));
+                $serviciosAux1 = $serviciosAux1->where('medidor', DB::raw("'$medidor_filtro'"));
+                $serviciosAux2 = $serviciosAux2->where('medidor', DB::raw("'$medidor_filtro'"));
             }
         }
-        $avisosAux = $avisos;
-        $total_registros = $avisosAux->count();
-        $pendientes = $avisosAux1->where('estado',  '=', DB::raw("1"))->count();
-        $realizados = $avisosAux2->where('estado', '>', DB::raw("1"))->count();
-        $avisos = $avisos->offset($offSet)->limit($perPage)->orderBy('id')->get();
+        $serviciosAux = $servicios;
+        $total_registros = $serviciosAux->count();
+        $pendientes = $serviciosAux1->where('estado',  '=', DB::raw("1"))->count();
+        $realizados = $serviciosAux2->where('estado', '>', DB::raw("1"))->count();
+        $servicios = $servicios->offset($offSet)->limit($perPage)->orderBy('id')->get();
 
-        $posts = new LengthAwarePaginator($avisos, $total_registros, $perPage, $page, [
+        $posts = new LengthAwarePaginator($servicios, $total_registros, $perPage, $page, [
             'path' => Paginator::resolveCurrentPath(),
             'pageName' => $pageName,
         ]);
 
-        $gestoresAsignados = Avisos::select('gestor_id')->where('agenda_id', $agenda)->groupBy('gestor_id')->get();
-
-
-        return view('agenda.asignar', [
-            'gestores' => $gestores,
+        $lectoresAsignados = null;
+        if($agendaModel->tipo_lectura_id == 1){
+          $lectoresAsignados = Auditoria::select('lector_id')->where('agenda_id', $agenda)->groupBy('lector_id')->get();
+        }elseif($agendaModel->tipo_lectura_id == 2){
+          $lectoresAsignados = Pci::select('lector_id')->where('agenda_id', $agenda)->groupBy('lector_id')->get();
+        }
+        return view('agenda.detalle', [
+            'lectores' => $lectores,
             'usuarios' => $usuarios,
             'agenda' => $agenda,
             'agendaModel' => $agendaModel,
-            'avisos' => $posts,
-            'gestoresAsignados' => $gestoresAsignados,
+            'servicios' => $posts,
+            'lectoresAsignados' => $lectoresAsignados,
             'pendientes' => $pendientes,
             'realizados' => $realizados,
-            'gestor_filtro' => $gestor_filtro,
+            'gestor_filtro' => $lector_filtro,
             'estados_filtro' => $estados_filtro,
             'nic_filtro' => $nic_filtro,
             'medidor_filtro' => $medidor_filtro
         ]);
     }
 
-    //Asignar Avisos
-    public function cargarAvisos(Request $request)
+    public function asignarUnoAUno(Request $request)
     {
         $agenda = Agenda::find($request->agenda);
-        $gestor = $request->gestor;
+        $lector = $request->gestor;
         $user = $request->user;
 
-        $avisos = AvisosTemp::where('gestor', $gestor)->where('agenda_id', $agenda->id)->get();
-
-        foreach ($avisos as $aviso) {
-            $av = new Avisos();
-            $av->id = $aviso->id;
-            $av->campana = $aviso->campana;
-            $av->campana2 = $aviso->campana2;
-            $av->fecha_entrega = $aviso->fecha_entrega;
-            $av->tipo_visita = $aviso->tipo_visita;
-            $av->municipio = $aviso->municipio;
-            $av->localidad = $aviso->localidad;
-            $av->barrio = $aviso->barrio;
-            $av->direccion = $aviso->direccion;
-            $av->cliente = $aviso->cliente;
-            $av->deuda = $aviso->deuda;
-            $av->factura_vencida = $aviso->factura_vencida;
-            $av->nic = $aviso->nic;
-            $av->nis = $aviso->nis;
-            $av->medidor = $aviso->medidor;
-            $av->gestor = $aviso->gestor;
-            $av->supervisor = $aviso->supervisor;
-            $av->tarifa = $aviso->tarifa;
-            $av->compromiso = $aviso->compromiso;
-            $av->avisos = $aviso->avisos;
-            $av->delegacion_id = $agenda->delegacion_id;
-            $av->orden_realizado = 0;
-            $av->estado = 1;
-            $av->gestor_id = $user;
-            $av->admin_id = Auth::user()->id;
-            $av->agenda_id = $agenda->id;
-
-            try {
-                $av->save();
-                $aviso->delete();
-            } catch (\Exception $e) {
-                return $e;
-            }
+        $servicios = null;
+        if($agenda->tipo_lectura_id == 1){
+          $servicios = AuditoriaTemp::where('lector', $lector)->where('agenda_id', $agenda->id)->get();
+        }elseif($agenda->tipo_lectura_id == 2){
+          $servicios = PciTemp::where('lector', $lector)->where('agenda_id', $agenda->id)->get();
         }
 
-        return redirect()->route('asignar.avisos', ['agenda' => $agenda]);
+        foreach ($servicios as $servicio) {
+          $serv = null;
+          if($agenda->tipo_lectura_id == 1){
+            $serv = new Auditoria();
+            $serv->barrio = $servicio->barrio;
+            $serv->localidad = $servicio->localidad;
+            $serv->cliente = $servicio->cliente;
+            $serv->direccion = $servicio->direccion;
+            $serv->nic = $servicio->nic;
+            $serv->ruta = $servicio->ruta;
+            $serv->itin = $servicio->itin;
+            $serv->medidor = $servicio->medidor;
+            $serv->motivo = $servicio->motivo;
+            $serv->nis = $servicio->nis;
+            $serv->lector = $servicio->lector;
+            $serv->an_anterior = $servicio->an_anterior;
+            $serv->lectura_anterior = $servicio->lectura_anterior;
+            $serv->orden_realizado = 0;
+            $serv->estado = 1;
+            $serv->lector_id = $user;
+            $serv->admin_id = Auth::user()->id;
+            $serv->agenda_id = $agenda->id;
+            $serv->pide_gps = 1;
+          }elseif($agenda->tipo_lectura_id == 2){
+            $serv = new Pci();
+            $serv->ct = $servicio->ct;
+            $serv->mt = $servicio->mt;
+            $serv->direccion = $servicio->direccion;
+            $serv->medidor = $servicio->medidor;
+            $serv->medidor_anterior = $servicio->medidor_anterior;
+            $serv->medidor_posterior = $servicio->medidor_posterior;
+            $serv->barrio = $servicio->barrio;
+            $serv->municipio = $servicio->municipio;
+            $serv->codigo = $servicio->codigo;
+            $serv->an_anterior = $servicio->an_anterior;
+            $serv->lectura_anterior = $servicio->lectura_anterior;
+            $serv->unicom = $servicio->unicom;
+            $serv->ruta = $servicio->ruta;
+            $serv->itin = $servicio->itin;
+            $serv->fecha_entrega = $servicio->fecha_entrega;
+            $serv->lector = $servicio->lector;
+            $serv->orden_realizado = 0;
+            $serv->estado = 1;
+            $serv->lector_id = $user;
+            $serv->admin_id = Auth::user()->id;
+            $serv->agenda_id = $agenda->id;
+            $serv->pide_gps = 1;
+          }
+          try {
+              $serv->save();
+              $servicio->delete();
+          } catch (\Exception $e) {
+          }
+        }
+
+        return redirect()->route('agenda.detalle', ['agenda' => $agenda->id]);
     }
 
-    //Asignar todos los avisos
-    public function asignarAllAvisos(Request $request)
+    public function asignarAll(Request $request)
     {
         $agenda = Agenda::find($request->agenda);
-        $gestoresTemp = AvisosTemp::select('gestor')->where('agenda_id', $agenda->id)->groupBy('gestor')->get();
-        foreach ($gestoresTemp as $ges) {
-            $gestor = explode(" ", $ges->gestor);
+        $lectoresTemp = null;
+        if($agenda->tipo_lectura_id == 1){
+          $lectoresTemp = AuditoriaTemp::select('lector')->where('agenda_id', $agenda->id)->groupBy('lector')->get();
+        }elseif($agenda->tipo_lectura_id == 2){
+          $lectoresTemp = PciTemp::select('lector')->where('agenda_id', $agenda->id)->groupBy('lector')->get();
+        }
+
+        foreach ($lectoresTemp as $ges) {
+            $gestor = explode(" ", $ges->lector);
             $cedula = trim($gestor[0]);
-            $avisosTemp = AvisosTemp::where('gestor', $ges->gestor)->where('agenda_id', $agenda->id)->get();
+
+            $serviciosTemp = null;
+            if($agenda->tipo_lectura_id == 1){
+              $serviciosTemp = AuditoriaTemp::where('lector', $ges->lector)->where('agenda_id', $agenda->id)->get();
+            }elseif($agenda->tipo_lectura_id == 2){
+              $serviciosTemp = PciTemp::where('lector', $ges->lector)->where('agenda_id', $agenda->id)->get();
+            }
+
             $usuario = Usuarios::where('nickname', $cedula)->first();
-            foreach ($avisosTemp as $aviso) {
-                $av = new Avisos();
-                $av->campana = $aviso->campana;
-                $av->campana2 = $aviso->campana2;
-                $av->fecha_entrega = $aviso->fecha_entrega;
-                $av->tipo_visita = $aviso->tipo_visita;
-                $av->municipio = $aviso->municipio;
-                $av->localidad = $aviso->localidad;
-                $av->barrio = $aviso->barrio;
-                $av->direccion = $aviso->direccion;
-                $av->cliente = $aviso->cliente;
-                $av->deuda = $aviso->deuda;
-                $av->factura_vencida = $aviso->factura_vencida;
-                $av->nic = $aviso->nic;
-                $av->nis = $aviso->nis;
-                $av->medidor = $aviso->medidor;
-                $av->gestor = $aviso->gestor;
-                $av->supervisor = $aviso->supervisor;
-                $av->tarifa = $aviso->tarifa;
-                $av->compromiso = $aviso->compromiso;
-                $av->avisos = $aviso->avisos;
-                $av->delegacion_id = $agenda->delegacion_id;
-                $av->orden_realizado = 0;
-                $av->estado = 1;
-                $av->gestor_id = $usuario->id;
-                $av->admin_id = Auth::user()->id;
-                $av->agenda_id = $agenda->id;
+            foreach ($serviciosTemp as $servicio) {
+              $serv = null;
+              if($agenda->tipo_lectura_id == 1){
+                $serv = new Auditoria();
+                $serv->barrio = $servicio->barrio;
+                $serv->localidad = $servicio->localidad;
+                $serv->cliente = $servicio->cliente;
+                $serv->direccion = $servicio->direccion;
+                $serv->nic = $servicio->nic;
+                $serv->ruta = $servicio->ruta;
+                $serv->itin = $servicio->itin;
+                $serv->medidor = $servicio->medidor;
+                $serv->motivo = $servicio->motivo;
+                $serv->nis = $servicio->nis;
+                $serv->lector = $servicio->lector;
+                $serv->an_anterior = $servicio->an_anterior;
+                $serv->lectura_anterior = $servicio->lectura_anterior;
+                $serv->orden_realizado = 0;
+                $serv->estado = 1;
+                $serv->lector_id = $usuario->id;
+                $serv->admin_id = Auth::user()->id;
+                $serv->agenda_id = $agenda->id;
+                $serv->pide_gps = 1;
+              }elseif($agenda->tipo_lectura_id == 2){
+                $serv = new Pci();
+                $serv->ct = $servicio->ct;
+                $serv->mt = $servicio->mt;
+                $serv->direccion = $servicio->direccion;
+                $serv->medidor = $servicio->medidor;
+                $serv->medidor_anterior = $servicio->medidor_anterior;
+                $serv->medidor_posterior = $servicio->medidor_posterior;
+                $serv->barrio = $servicio->barrio;
+                $serv->municipio = $servicio->municipio;
+                $serv->codigo = $servicio->codigo;
+                $serv->an_anterior = $servicio->an_anterior;
+                $serv->lectura_anterior = $servicio->lectura_anterior;
+                $serv->unicom = $servicio->unicom;
+                $serv->ruta = $servicio->ruta;
+                $serv->itin = $servicio->itin;
+                $serv->fecha_entrega = $servicio->fecha_entrega;
+                $serv->lector = $servicio->lector;
+                $serv->orden_realizado = 0;
+                $serv->estado = 1;
+                $serv->lector_id = $usuario->id;
+                $serv->admin_id = Auth::user()->id;
+                $serv->agenda_id = $agenda->id;
+                $serv->pide_gps = 1;
+              }
 
-                try {
-                    $av->save();
-                    $aviso->delete();
-                } catch (\Exception $e) {
-
-                }
+              try {
+                $serv->save();
+                $servicio->delete();
+              } catch (\Exception $e) {
+              }
             }
         }
-        return redirect()->route('asignar.avisos', ['agenda' => $agenda]);
-    }
-
-    public function getAvisos()
-    {
-        $id = Auth::user()->id;
-        $avisos = AvisosTemp::where('admin_id', DB::raw($id))->get();
-
-        return response()->json([
-            'data' => $avisos
-        ]);
+        return redirect()->route('agenda.detalle', ['agenda' => $agenda->id]);
     }
 
     public function vaciarCarga(Request $request)
     {
         $id = Auth::user()->id;
-        $avisos = AvisosTemp::where('admin_id', $id)->where('agenda_id', $request->agenda)->delete();
+        $agenda = Agenda::find($request->agenda);
+        if($agenda->tipo_lectura_id == 1){
+          AuditoriaTemp::where('admin_id', $id)->where('agenda_id', $request->agenda)->delete();
+        }elseif($agenda->tipo_lectura_id == 2){
+          PciTemp::where('admin_id', $id)->where('agenda_id', $request->agenda)->delete();
+        }
 
-        return redirect()->route('asignar.avisos', ['agenda' => $request->agenda]);
+        return redirect()->route('agenda.detalle', ['agenda' => $agenda->id]);
     }
 
-    public function deleteAgenda($agenga)
+    public function deleteAgenda($agenda)
     {
-        Agenda::where('id', $agenga)->delete();
+        $agenda = Agenda::where('id', $agenda)->first();
+
+        $pendientes = 0;
+        $realizados = 0;
+        $cargasPendientes = 0;
+        if($agenda->tipo_lectura_id == 1){
+          $pendientes = Auditoria::where('estado', 1)->where('agenda_id', $agenda->id)->count();
+          $realizados = Auditoria::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
+          $cargasPendientes = AuditoriaTemp::where('agenda_id', $agenda->id)->count();
+        } elseif($agenda->tipo_lectura_id == 2){
+          $pendientes = Pci::where('estado', 1)->where('agenda_id', $agenda->id)->count();
+          $realizados = Pci::where('estado', '>', 1)->where('agenda_id', $agenda->id)->count();
+          $cargasPendientes = PciTemp::where('agenda_id', $agenda->id)->count();
+        }
+
+        $flag = true;
+
+        if ($pendientes > 0 || $cargasPendientes > 0 || $realizados > 0){
+            $flag = false;
+        }
+        if ($flag){
+            $agenda->delete();
+        }
+
         return \Redirect::route('agenda');
     }
 
-    public function editarAviso($id){
-        $aviso = Avisos::where('id', $id)->first();
-        $resultados = Resultados::all();
-        $anomalias = Anomalias::all();
-        $recaudos = EntidadesPagos::all();
-        $observaciones = ObservacionesRapidas::all();
+    public function viewServicio($agenda, $servicio_id){
+      $agenda = Agenda::where('id', $agenda)->first();
+      $servicio = null;
+      $path = '';
+      $view = '';
+      if($agenda->tipo_lectura_id == 1){
+        $servicio = Auditoria::where('id', $servicio_id)->first();
+        $filename = $servicio->id . ".png";
+        $path = config('myconfig.public_fotos_auditoria')  . $filename;
+        $view = 'agenda.editar_auditoria';
+      } elseif($agenda->tipo_lectura_id == 2){
+        $servicio = Pci::where('id', $servicio_id)->first();
+        $filename = $servicio->id . ".png";
+        $path = config('myconfig.public_fotos_pci')  . $filename;
+        $view = 'agenda.editar_pci';
+      }
+      $anomalias = Anomalias::all();
+      $observaciones = ObservacionesRapidas::all();
 
-        $filename = $aviso->id . ".png";
-
-        $path = config('myconfig.public_fotos')  . $filename;
-
-        $id = Auth::user()->id;
-
-        return view('agenda.editar', [
-            'aviso' => $aviso,
-            'id' => $id,
-            'resultados' => $resultados,
-            'anomalias' => $anomalias,
-            'recaudos' => $recaudos,
-            'observaciones' => $observaciones,
-            'path' => $path
-        ]);
+      return view($view, [
+          'servicio' => $servicio,
+          'agenda' => $agenda,
+          'anomalias' => $anomalias,
+          'observaciones' => $observaciones,
+          'path' => $path
+      ]);
     }
 
     public function saveAviso(Request $request){
+      $agenda = Agenda::where('id', $request->agenda)->first();
+      if($agenda->tipo_lectura_id == 1){
+        $servicio = Auditoria::where('id', $request->servicio)->first();
+        $servicio->anomalia_id = $request->anomalia;
+        $servicio->lectura = $request->lectura;
+        $servicio->habitado = $request->habitado;
+        $servicio->visible = $request->visible;
+        $servicio->observacion_rapida = $request->observacion;
+        $servicio->observacion_analisis = $request->observacion_analisis;
+        $servicio->estado = 3;
+        $servicio->save();
+      } elseif($agenda->tipo_lectura_id == 2){
+        $servicio = Pci::where('id', $request->servicio)->first();
+        $servicio->anomalia_id = $request->anomalia;
+        $servicio->lectura = $request->lectura;
+        $servicio->observacion_analisis = $request->observacion_analisis;
+        $servicio->estado = 3;
+        $servicio->save();
+      }
 
-        $aviso = Avisos::where('id', $request->aviso_id)->first();
-
-        $aviso->resultado_id = $request->resultado;
-        $aviso->anomalia_id = $request->anomalia;
-        $aviso->entidad_recaudo_id = $request->recaudo;
-        $aviso->fecha_pago = $request->fecha_pago;
-        $aviso->persona_contacto = $request->atiende;
-        $aviso->cedula = $request->cedula;
-        $aviso->titular_pago = $request->titular;
-        $aviso->telefono = $request->telefono;
-        $aviso->correo_electronico = $request->correo_electronico;
-        $aviso->lectura = $request->lectura;
-        $aviso->observacion_rapida = $request->observacion;
-        $aviso->observacion_analisis = $request->observacion_analisis;
-        $aviso->estado = 3;
-
-        $aviso->update();
-
-        return redirect()->route('asignar.avisos', ['id' => $aviso->agenda_id]);
+      return redirect()->route('agenda.detalle', ['agenda' => $request->agenda]);
     }
 
 
-    public function deleteAviso($aviso){
-
-        $agenda_id = Avisos::where('id', $aviso)->first()->agenda_id;
-
-        Avisos::where('id', $aviso)->where('estado', 1)->delete();
-
-        return redirect()->route('asignar.avisos', ['id' => $agenda_id]);
+    public function deleteServicio($agenda, $servicio){
+      $agenda = Agenda::where('id', $agenda)->first();
+      if($agenda->tipo_lectura_id == 1){
+        Auditoria::where('id', $servicio)->where('estado', 1)->delete();
+      } elseif($agenda->tipo_lectura_id == 2){
+        Pci::where('id', $servicio)->where('estado', 1)->delete();
+      }
+      return redirect()->route('agenda.detalle', ['id' => $agenda]);
     }
 
-    public function deleteAvisoPorSeleccion(Request $request){
+    public function deleteServicioPorSeleccion(Request $request){
         $arrayIdAvisos = null;
         if ($request->has('avisos')) {
             $arrayIdAvisos = $request->get('avisos');
@@ -428,19 +550,19 @@ class AgendaController extends Controller
         $agenda_id = $request->agenda_id;
 
         if($arrayIdAvisos != null){
-            Avisos::whereIn('id', $arrayIdAvisos)->where('estado', 1)->delete();
+          $agenda = Agenda::where('id', $agenda_id)->first();
+          if($agenda->tipo_lectura_id == 1){
+            Auditoria::whereIn('id', $arrayIdAvisos)->where('estado', 1)->delete();
+          } elseif($agenda->tipo_lectura_id == 2){
+            Pci::whereIn('id', $arrayIdAvisos)->where('estado', 1)->delete();
+          }
         }
-
-        return redirect()->route('asignar.avisos', ['id' => $agenda_id]);
+        return redirect()->route('agenda.detalle', ['id' => $agenda_id]);
     }
 
     public function visitaMapa() {
-        $id = Auth::user()->id;
-
         $usuarios = Usuarios::orderBy('nombre')->get();
-
         return view('geo.mapas', [
-            'id' => $id,
             'usuarios' => $usuarios
         ]);
     }
