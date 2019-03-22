@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Avisos;
-use App\Delegacion;
+use App\Auditoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -18,20 +17,20 @@ class DownloadController extends Controller
     {
         $agenda = $request->agenda;
 
-        $model = new Avisos();
+        $model = new Auditoria();
         $avisos = $model->hydrate(
             DB::select(
-                "call download_avisos($agenda)"
+                "call download_auditorias($agenda)"
             )
         );
 
         $this->avisos = $avisos;
 
-        Excel::create('Avisos', function ($excel) {
+        Excel::create('Auditorias', function ($excel) {
 
             $avisos = $this->avisos;
 
-            $excel->sheet('Avisos', function ($sheet) use ($avisos) {
+            $excel->sheet('Auditorias', function ($sheet) use ($avisos) {
 
                 $sheet->fromArray($avisos);
 
