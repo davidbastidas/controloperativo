@@ -155,6 +155,8 @@ class AgendaController extends Controller
                   $servicio->lector = $base[11];
                   $servicio->an_anterior = $base[12];
                   $servicio->lectura_anterior = $base[13];
+                  $servicio->pide_foto = $base[14];
+                  $servicio->pide_gps = $base[15];
                   $servicio->admin_id = Auth::user()->id;
                   $servicio->agenda_id = $agenda->id;
                   $servicio->save();
@@ -176,6 +178,8 @@ class AgendaController extends Controller
                   $servicio->an_anterior = $base[14];
                   $servicio->lectura_anterior = $base[15];
                   $servicio->fecha_entrega = $base[16]->format('Y-m-d');
+                  $servicio->pide_foto = $base[17];
+                  $servicio->pide_gps = $base[18];
                   $servicio->admin_id = Auth::user()->id;
                   $servicio->agenda_id = $agenda->id;
                   $servicio->save();
@@ -315,6 +319,8 @@ class AgendaController extends Controller
             $serv->lector = $servicio->lector;
             $serv->an_anterior = $servicio->an_anterior;
             $serv->lectura_anterior = $servicio->lectura_anterior;
+            $serv->pide_foto = $servicio->pide_foto;
+            $serv->pide_gps = $servicio->pide_gps;
             $serv->orden_realizado = 0;
             $serv->estado = 1;
             $serv->lector_id = $user;
@@ -338,6 +344,8 @@ class AgendaController extends Controller
             $serv->ruta = $servicio->ruta;
             $serv->itin = $servicio->itin;
             $serv->fecha_entrega = $servicio->fecha_entrega;
+            $serv->pide_foto = $servicio->pide_foto;
+            $serv->pide_gps = $servicio->pide_gps;
             $serv->lector = $servicio->lector;
             $serv->orden_realizado = 0;
             $serv->estado = 1;
@@ -395,6 +403,8 @@ class AgendaController extends Controller
                 $serv->lector = $servicio->lector;
                 $serv->an_anterior = $servicio->an_anterior;
                 $serv->lectura_anterior = $servicio->lectura_anterior;
+                $serv->pide_foto = $servicio->pide_foto;
+                $serv->pide_gps = $servicio->pide_gps;
                 $serv->orden_realizado = 0;
                 $serv->estado = 1;
                 $serv->lector_id = $usuario->id;
@@ -418,6 +428,8 @@ class AgendaController extends Controller
                 $serv->ruta = $servicio->ruta;
                 $serv->itin = $servicio->itin;
                 $serv->fecha_entrega = $servicio->fecha_entrega;
+                $serv->pide_foto = $servicio->pide_foto;
+                $serv->pide_gps = $servicio->pide_gps;
                 $serv->lector = $servicio->lector;
                 $serv->orden_realizado = 0;
                 $serv->estado = 1;
