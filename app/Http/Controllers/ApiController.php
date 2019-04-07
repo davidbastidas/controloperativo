@@ -15,8 +15,7 @@ use Carbon\Carbon;
 
 class ApiController extends Controller
 {
-  public function login(Request $request)
-  {
+  public function login(Request $request){
     $response = null;
     $usuarios = Usuarios::where('nickname', '=', $request->user)->where('contrasena', '=', $request->password)->first();
     if(isset($usuarios->id)){
@@ -25,7 +24,7 @@ class ApiController extends Controller
         'nombre' => $usuarios->nombre,
         'nickname' => $usuarios->nickname,
         'tipo' => $usuarios->tipo_id,
-        'fk_delegacion' => $usuarios->delegacion_id,
+        'fk_delegacion' => 1,
         'fk_id' => $usuarios->id
       );
     } else {
@@ -77,6 +76,7 @@ class ApiController extends Controller
         'medidor' => $auditoria->medidor,
         'motivo' => $auditoria->motivo,
         'nis' => $auditoria->nis,
+        'pide_foto' => $auditoria->pide_foto,
         'pide_gps' => $auditoria->pide_gps
       ));
     }
@@ -117,6 +117,7 @@ class ApiController extends Controller
         'unicom' => $pci->unicom,
         'ruta' => $pci->ruta,
         'itin' => $pci->itin,
+        'pide_foto' => $pci->pide_foto,
         'pide_gps' => $pci->pide_gps
       ));
     }
@@ -128,7 +129,8 @@ class ApiController extends Controller
         'nombre' => $anomalia->nombre,
         'codigo' => $anomalia->codigo,
         'lectura' => $anomalia->lectura,
-        'foto' => $anomalia->foto
+        'foto' => $anomalia->foto,
+        'orden' => $anomalia->orden
       ));
     }
 
@@ -157,30 +159,33 @@ class ApiController extends Controller
     if($request->user){
       $auditoria = Auditoria::where('id', '=', $request->id)->where('estado', '=', '1')->first();
       if(isset($auditoria->id)){
-        if($request->anomalia == 0){
-          $request->anomalia = null;
-        }
-        if($request->observacion_rapida == 0){
-          $request->observacion_rapida = null;
-        }
-        $auditoria->anomalia_id = $request->anomalia;
-        $auditoria->observacion_rapida = $request->observacion_rapida;
-        $auditoria->lectura = $request->lectura;
-        $auditoria->observacion_analisis = $request->observacion_analisis;
-        $auditoria->latitud = $request->latitud;
-        $auditoria->longitud = $request->longitud;
-        $auditoria->fecha_recibido = $request->fecha_realizado;
-        $auditoria->fecha_recibido_servidor = Carbon::now();
-        $auditoria->estado = 2;
-        $auditoria->orden_realizado = $request->orden_realizado;
-
-        $auditoria->save();
-
         try {
+          if($request->anomalia == 0){
+            $request->anomalia = null;
+          }
+          if($request->observacion_rapida == 0){
+            $request->observacion_rapida = null;
+          }
+          $auditoria->anomalia_id = $request->anomalia;
+          $auditoria->observacion_rapida = $request->observacion_rapida;
+          $auditoria->lectura = $request->lectura;
+          $auditoria->habitado = $request->habitado;
+          $auditoria->visible = $request->visible;
+          $auditoria->observacion_analisis = $request->observacion_analisis;
+          $auditoria->latitud = $request->latitud;
+          $auditoria->longitud = $request->longitud;
+          $auditoria->fecha_recibido = $request->fecha_realizado;
+          $auditoria->fecha_recibido_servidor = Carbon::now();
+          $auditoria->estado = 2;
+          $auditoria->orden_realizado = $request->orden_realizado;
+
+          $auditoria->save();
+
+          /*
           $logSeg = new Log();
           $logSeg->log = '' . $request;
           $logSeg->servicio_id = $auditoria->id;
-          $logSeg->save();
+          $logSeg->save();}*/
 
           if($request->foto != null || $request->foto != ""){
             //decode base64 string
@@ -189,18 +194,19 @@ class ApiController extends Controller
             $archivo = $auditoria->id . '.png';
             \File::put(config('myconfig.ruta_fotos_auditoria') . $archivo, $image);
           }
+          $response = array(
+            'estado' => true
+          );
         } catch (\Exception $e) {
           $logSeg = new Log();
           $logSeg->log = '' . $e;
           $logSeg->servicio_id = $auditoria->id;
           $logSeg->save();
         } finally {
-
+          $response = array(
+            'estado' => false
+          );
         }
-
-        $response = array(
-          'estado' => true
-        );
       } else {
         $response = array(
           'estado' => true
@@ -221,26 +227,26 @@ class ApiController extends Controller
     if($request->user){
       $pci = Pci::where('id', '=', $request->id)->where('estado', '=', '1')->first();
       if(isset($pci->id)){
-        if($request->anomalia == 0){
-          $request->anomalia = null;
-        }
-        $pci->anomalia_id = $request->anomalia;
-        $pci->lectura = $request->lectura;
-        $pci->observacion_analisis = $request->observacion_analisis;
-        $pci->latitud = $request->latitud;
-        $pci->longitud = $request->longitud;
-        $pci->fecha_recibido = $request->fecha_realizado;
-        $pci->fecha_recibido_servidor = Carbon::now();
-        $pci->estado = 2;
-        $pci->orden_realizado = $request->orden_realizado;
-
-        $pci->save();
-
         try {
+          if($request->anomalia == 0){
+            $request->anomalia = null;
+          }
+          $pci->anomalia_id = $request->anomalia;
+          $pci->lectura = $request->lectura;
+          $pci->observacion_analisis = $request->observacion_analisis;
+          $pci->latitud = $request->latitud;
+          $pci->longitud = $request->longitud;
+          $pci->fecha_recibido = $request->fecha_realizado;
+          $pci->fecha_recibido_servidor = Carbon::now();
+          $pci->estado = 2;
+          $pci->orden_realizado = $request->orden_realizado;
+
+          $pci->save();
+          /*
           $logSeg = new Log();
           $logSeg->log = '' . $request;
           $logSeg->servicio_id = $pci->id;
-          $logSeg->save();
+          $logSeg->save();*/
 
           if($request->foto != null || $request->foto != ""){
             //decode base64 string
@@ -249,18 +255,19 @@ class ApiController extends Controller
             $archivo = $pci->id . '.png';
             \File::put(config('myconfig.ruta_fotos_pci') . $archivo, $image);
           }
+          $response = array(
+            'estado' => true
+          );
         } catch (\Exception $e) {
           $logSeg = new Log();
           $logSeg->log = '' . $e;
           $logSeg->servicio_id = $pci->id;
           $logSeg->save();
         } finally {
-
+          $response = array(
+            'estado' => false
+          );
         }
-
-        $response = array(
-          'estado' => true
-        );
       } else {
         $response = array(
           'estado' => true
