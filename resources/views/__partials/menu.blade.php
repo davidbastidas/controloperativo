@@ -61,5 +61,12 @@
                 <span class="menu-title">Mapa de Visitas</span>
             </a>
         </li>
+
+        <li class="nav-item hand">
+            <a class="nav-link" href="{{route('agenda.pci.uploadlecturas')}}">
+                <i class="menu-icon mdi mdi-map"></i>
+                <span class="menu-title">Carga de Lecturas</span>
+            </a>
+        </li>
     </ul>
 </nav>
