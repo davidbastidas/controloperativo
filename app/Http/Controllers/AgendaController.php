@@ -411,7 +411,6 @@ class AgendaController extends Controller
                 $serv->lector_id = $usuario->id;
                 $serv->admin_id = Auth::user()->id;
                 $serv->agenda_id = $agenda->id;
-                $serv->pide_gps = 1;
               }elseif($agenda->tipo_lectura_id == 2){
                 $serv = new Pci();
                 $serv->ct = $servicio->ct;
