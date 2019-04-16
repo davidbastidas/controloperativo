@@ -135,7 +135,7 @@
 
                     <div class="row">
                         <div class="col-md-12">
-                            <form class="form-inline" action="{{route('agenda.asignar',['agenda' => $agenda])}}"
+                            <form class="form-inline" action="{{route('agenda.detalle',['agenda' => $agenda])}}"
                                   method="get">
                                 <label class="sr-only">Lector</label>
                                 <select name="gestor_filtro" class="form-control mb-2 mr-sm-2">

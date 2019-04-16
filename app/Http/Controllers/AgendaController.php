@@ -13,6 +13,7 @@ use App\TipoLectura;
 use App\ObservacionesRapidas;
 use App\User;
 use App\Usuarios;
+use App\LecturasPci;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -496,6 +497,8 @@ class AgendaController extends Controller
       $servicio = null;
       $path = '';
       $view = '';
+      $critica = false;
+      $mensajeCritica = '';
       if($agenda->tipo_lectura_id == 1){
         $servicio = Auditoria::where('id', $servicio_id)->first();
         $filename = $servicio->id . ".png";
@@ -506,6 +509,68 @@ class AgendaController extends Controller
         $filename = $servicio->id . ".png";
         $path = config('myconfig.public_fotos_pci')  . $filename;
         $view = 'agenda.editar_pci';
+        if($servicio->estado > 1){
+          $critica = true;
+          $ultimasLecturas = LecturasPci::where('pci', $servicio->medidor)
+                                  ->where('fecha', '>=',DB::raw("'" . $servicio->fecha_recibido . "'-interval 3 month"))
+                                  ->orderBy('fecha')->get();
+          $lectura1 = -1;
+          $lectura2 = -1;
+          $consumoActual = -1;
+          $consumoAnterior = -1;
+          $desviacion = -1;
+          if(count($ultimasLecturas) >= 2){
+            $count = 1;
+            foreach ($ultimasLecturas as $l) {
+              if($count == 1){
+                $lectura1 = $l->lectura;
+                $count++;
+              }else{
+                $lectura2 = $l->lectura;break;
+              }
+            }
+            $consumoActual = $servicio->lectura - $lectura1;
+            $consumoAnterior = $lectura1 - $lectura2;
+            $desviacion = 0;
+            if($consumoAnterior > 0){
+              $desviacion = ceil((($consumoAnterior - $consumoActual)/$consumoAnterior)*100) . '%';
+            }
+          }
+          $ultimomes = LecturasPci::where('pci', $servicio->medidor)->orderByDesc('fecha')->first();
+          $ultimaLectura = -1;
+          $ultimaAnom = '';
+          if(isset($ultimomes->id)){
+            $ultimaLectura = $ultimomes->lectura;
+            $ultimaAnom = $ultimomes->anomalia;
+          }
+          //critica
+          if($servicio->lectura == 0){
+            $mensajeCritica = 'LECTURA CERO';
+          }else if($ultimaLectura == -1){
+            $mensajeCritica = 'SIN LECTURA ANTERIOR';
+          }else if($servicio->lectura > $ultimaLectura){
+            $mensajeCritica = 'LECTURA OK ' . $ultimaLectura;
+          }else if($servicio->lectura == $ultimaLectura){
+            $mensajeCritica = 'LECTURA REPETIDA';
+          }else{
+            $mensajeCritica = 'LECTURA MENOR ' . $ultimaLectura;
+          }
+          if($servicio->anomalia_id == 45){//SIN ANOMALIA EL CODIGO EN LA TABLA
+            $mensajeCritica .= '';
+          }else if($servicio->anomalia->nombre == $ultimaAnom){
+            $mensajeCritica .= ' - ANOMALIA IGUAL ' . $ultimaAnom;
+          }else if($ultimaAnom == ''){
+            $mensajeCritica .= ' - SIN ANOMALIA ANTERIOR';
+          }else{
+            $mensajeCritica .= ' - ANOMALIA DIFERENTE ' . $ultimaAnom;
+          }
+          if($desviacion == -1){
+            $mensajeCritica .= ' - Desviacion SIN CALCULAR';
+          }else{
+            $mensajeCritica .= ' - Desviacion ' . $desviacion;
+          }
+
+        }
       }
       $anomalias = Anomalias::all();
       $observaciones = ObservacionesRapidas::all();
@@ -515,7 +580,9 @@ class AgendaController extends Controller
           'agenda' => $agenda,
           'anomalias' => $anomalias,
           'observaciones' => $observaciones,
-          'path' => $path
+          'path' => $path,
+          'critica' => $critica,
+          'mensajeCritica' => $mensajeCritica
       ]);
     }
 
@@ -606,5 +673,34 @@ class AgendaController extends Controller
         return response()->json([
             'puntos' => $puntos
         ]);
+    }
+
+    public function subirLecturasPci(Request $request)
+    {
+        if(isset($request->file)){
+          $archivo = $request->file;
+          $results = Excel::load($archivo)->all()->toArray();
+          foreach ($results as $row) {
+              foreach ($row as $x => $x_value) {
+                  $base = [];
+                  $count = 0;
+                  foreach ($x_value as $y => $y_value) {
+                      $base[$count] = $y_value;
+                      $count++;
+                  }
+                  $servicio = new LecturasPci();
+                  $servicio->ct = $base[0];
+                  $servicio->mt = $base[1];
+                  $servicio->pci = $base[2];
+                  $servicio->lectura = $base[3];
+                  $servicio->anomalia = $base[4];
+                  $servicio->fecha = $base[5]->format('Y-m-d');
+                  $servicio->save();
+              }
+          }
+          return \Redirect::route('agenda.pci.uploadlecturas', array('success' => 'Las lecturas se cargaron'));
+        }else{
+          return view('pci.upload_lecturas');
+        }
     }
 }

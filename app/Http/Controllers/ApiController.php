@@ -9,9 +9,11 @@ use App\ObservacionesRapidas;
 use App\Usuarios;
 use App\Log;
 use App\Agenda;
+use App\LecturasPci;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ApiController extends Controller
 {
@@ -101,6 +103,28 @@ class ApiController extends Controller
                     ->where('estado', '=', '1')
                     ->whereIn('agenda_id', $arrayIn)->get();
     foreach ($pcis as $pci) {
+      $ultimomes = LecturasPci::where('pci', $pci->medidor)->orderByDesc('fecha')->first();
+      $lectura1 = -1;
+      $lectura2 = -1;
+      $ultimaAnom = '';
+      if(isset($ultimomes->id)){
+        $ultimaAnom = $ultimomes->anomalia;
+      }
+      $ultimasLecturas = LecturasPci::where('pci', $pci->medidor)
+                              ->where('fecha', '>=',DB::raw("'" . $pci->created_at . "'-interval 3 month"))
+                              ->orderBy('fecha')->get();
+      if(count($ultimasLecturas) >= 2){
+        $count = 1;
+        foreach ($ultimasLecturas as $l) {
+          if($count == 1){
+            $lectura1 = $l->lectura;
+            $count++;
+          }else{
+            $lectura2 = $l->lectura;break;
+          }
+        }
+      }
+
       array_push($arrayPci, (object) array(
         'id' => $pci->id,
         'ct' => $pci->ct,
@@ -118,7 +142,11 @@ class ApiController extends Controller
         'ruta' => $pci->ruta,
         'itin' => $pci->itin,
         'pide_foto' => $pci->pide_foto,
-        'pide_gps' => $pci->pide_gps
+        'pide_gps' => $pci->pide_gps,
+        'ultima_anomalia' => $ultimaAnom,
+        'lectura1' => $lectura1,
+        'lectura2' => $lectura2,
+        'desviacion_aceptada' => 30,
       ));
     }
 

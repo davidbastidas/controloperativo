@@ -131,4 +131,12 @@ Route::group(['middleware' => ['auth']], function () {
         'as' => 'admin.servicios.getPointMapVisita',
         'uses' => 'AgendaController@getPointMapVisita'
     ]);
+
+    //carga de lecturas Pci
+    Route::match(['get', 'post'], '/admin/pci/lecturas',
+        [
+            'as' => 'agenda.pci.uploadlecturas',
+            'uses' => 'AgendaController@subirLecturasPci'
+        ]
+    );
 });
