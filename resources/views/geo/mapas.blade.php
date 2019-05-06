@@ -13,13 +13,19 @@
                     <div class="row">
                         <div class="col-md-3">
                             <select class="form-control" id="gestor_id">
-                                <option value="">[Gestor]</option>
+                                <option value="">[Lector]</option>
                                 @foreach ($usuarios as $usuario)
                                     <option value="{{$usuario->id}}">{{$usuario->nombre}}</option>
                                 @endforeach
                             </select>
                         </div>
-
+                        <div class="col-md-2">
+                            <select class="form-control" id="tipo_servicio_id">
+                                <option value="">[Tipo de Servicio]</option>
+                                <option value="auditoria">AUDITORIA</option>
+                                <option value="pci">PCI</option>
+                            </select>
+                        </div>
                         <div class="col-md-3">
                             <input id="fecha" class="form-control" type="date"/>
                         </div>
@@ -66,7 +72,8 @@
         $('#btnBuscarVisitas').on('click', function () {
             let fecha = $('#fecha').val();
             let gestor_id = $('#gestor_id').val();
-            visitasMap.getPointMapVisita(fecha, gestor_id);
+            let tipo_servicio_id = $('#tipo_servicio_id').val();
+            visitasMap.getPointMapVisita(fecha, gestor_id, tipo_servicio_id);
         });
     </script>
 @endsection

@@ -495,6 +495,7 @@ class AgendaController extends Controller
       $view = '';
       $critica = false;
       $mensajeCritica = '';
+      $historiaLecturas = null;
       if($agenda->tipo_lectura_id == 1){
         $servicio = Auditoria::where('id', $servicio_id)->first();
         $filename = $servicio->id . ".png";
@@ -505,11 +506,13 @@ class AgendaController extends Controller
         $filename = $servicio->id . ".png";
         $path = config('myconfig.public_fotos_pci')  . $filename;
         $view = 'agenda.editar_pci';
+        $historiaLecturas = LecturasPci::where('pci', $servicio->medidor)
+                                ->orderByDesc('fecha')->limit(6)->get();
         if($servicio->estado > 1){
-          $critica = true;
           $ultimasLecturas = LecturasPci::where('pci', $servicio->medidor)
                                   ->where('fecha', '>=',DB::raw("'" . $servicio->fecha_recibido . "'-interval 3 month"))
                                   ->orderBy('fecha')->get();
+          $critica = true;
           $lectura1 = -1;
           $lectura2 = -1;
           $consumoActual = -1;
@@ -578,7 +581,8 @@ class AgendaController extends Controller
           'observaciones' => $observaciones,
           'path' => $path,
           'critica' => $critica,
-          'mensajeCritica' => $mensajeCritica
+          'mensajeCritica' => $mensajeCritica,
+          'ultimasLecturas' => $historiaLecturas
       ]);
     }
 
@@ -659,11 +663,20 @@ class AgendaController extends Controller
 
         $puntos = [];
         if(count($arrayAgendas) > 0){
-            $puntos = Avisos::whereIn('agenda_id', $arrayAgendas)
-                ->where('gestor_id', $request->gestor_id)
+          if($request->tipo_servicio_id == 'auditoria'){
+            $puntos = Auditoria::whereIn('agenda_id', $arrayAgendas)
+                ->where('lector_id', $request->gestor_id)
                 ->where('estado', '>', 1)
                 ->where('latitud', '!=', '0.0')
                 ->orderBy('orden_realizado')->get();
+          }else if($request->tipo_servicio_id == 'pci'){
+            $puntos = Pci::whereIn('agenda_id', $arrayAgendas)
+                ->where('lector_id', $request->gestor_id)
+                ->where('estado', '>', 1)
+                ->where('latitud', '!=', '0.0')
+                ->orderBy('orden_realizado')->get();
+          }
+
         }
 
         return response()->json([
@@ -697,6 +710,65 @@ class AgendaController extends Controller
           return \Redirect::route('agenda.pci.uploadlecturas', array('success' => 'Las lecturas se cargaron'));
         }else{
           return view('pci.upload_lecturas');
+        }
+    }
+    public function consultaServicios(Request $request)
+    {
+        if(isset($request->medidor_filtro) || isset($request->nic_filtro)){
+          $servicios = [];
+          if(isset($request->nic_filtro)){
+            $auditorias = Auditoria::where('nic',$request->nic_filtro)->orWhere('medidor',$request->medidor_filtro)->get();
+            foreach ($auditorias as $aud) {
+              $fechaC = new Carbon($aud->fecha_recibido);
+              $anomalia = '';
+              if(isset($aud->anomalia->nombre)){
+                $anomalia = $aud->anomalia->nombre;
+              }
+              $filename = $aud->id . ".png";
+              $path = config('myconfig.public_fotos_auditoria')  . $filename;
+              array_push($servicios, (object) array(
+                                          'fecha' => $fechaC->format('d/m/Y'),
+                                          'nicct' => $aud->nic,
+                                          'medidor' => $aud->medidor,
+                                          'anomalia' => $anomalia,
+                                          'lectura' => $aud->lectura,
+                                          'lector' => $aud->usuario->nombre,
+                                          'path' => $path,
+                                        ));
+            }
+            $pci = Pci::where('medidor',$request->medidor_filtro)->get();
+            foreach ($pci as $pc) {
+              $fechaC = new Carbon($pc->fecha_recibido);
+              $anomalia = '';
+              if(isset($pc->anomalia->nombre)){
+                $anomalia = $pc->anomalia->nombre;
+              }
+              $filename = $pc->id . ".png";
+              $path = config('myconfig.public_fotos_pci')  . $filename;
+              array_push($servicios, (object) array(
+                                          'fecha' => $fechaC->format('d/m/Y'),
+                                          'nicct' => 'CT: ' . $pc->ct . ' - MT: ' . $pc->mt,
+                                          'medidor' => $pc->medidor,
+                                          'anomalia' => $anomalia,
+                                          'lectura' => $pc->lectura,
+                                          'lector' => $pc->usuario->nombre,
+                                          'path' => $path,
+                                        ));
+            }
+          }
+          $serviciosCollection = new Collection($servicios);
+          $servicios = $serviciosCollection->sortBy('fecha');
+          return view('agenda.consulta', array(
+                                          'nic_filtro' => $request->nic_filtro,
+                                          'medidor_filtro' => $request->medidor_filtro,
+                                          'servicios' => $servicios,
+          ));
+        }else{
+          return view('agenda.consulta', array(
+                                          'nic_filtro' => '',
+                                          'medidor_filtro' => '',
+                                          'servicios' => [],
+          ));
         }
     }
 }

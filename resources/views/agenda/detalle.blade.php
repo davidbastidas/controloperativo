@@ -191,14 +191,14 @@
                                                 <input type="checkbox" id="avisos-check-all">
                                             @endif
                                         </th>
-                                        <th style="width: 20%;">Gestor</th>
+                                        <th style="width: 20%;">Lector</th>
                                         <th style="width: 15%;">Barrio</th>
                                         @if ($agendaModel->tipo_lectura_id == 1)
                                           <th style="width: 10%;">NIC</th>
                                         @elseif ($agendaModel->tipo_lectura_id == 2)
                                           <th style="width: 10%;">MEDIDOR</th>
                                         @endif
-                                        <th style="width: 10%;">Result.</th>
+                                        <th style="width: 10%;">Anomalia.</th>
                                         <th style="width: 10%;">Accion</th>
                                     </tr>
                                     </thead>
@@ -224,8 +224,8 @@
                                               <td>{{ $serv->medidor }}</td>
                                             @endif
                                             <td>
-                                                @if (isset($serv->resultado->nombre))
-                                                    {{ $serv->resultado->nombre }}
+                                                @if (isset($serv->anomalia->nombre))
+                                                    {{ $serv->anomalia->nombre }}
                                                 @endif
                                             </td>
                                             <td>

@@ -63,6 +63,13 @@
         </li>
 
         <li class="nav-item hand">
+            <a class="nav-link" href="{{route('agenda.consultas.servicios')}}">
+                <i class="menu-icon mdi mdi-map"></i>
+                <span class="menu-title">Consutas Generales</span>
+            </a>
+        </li>
+
+        <li class="nav-item hand">
             <a class="nav-link" href="{{route('agenda.pci.uploadlecturas')}}">
                 <i class="menu-icon mdi mdi-map"></i>
                 <span class="menu-title">Carga de Lecturas</span>
