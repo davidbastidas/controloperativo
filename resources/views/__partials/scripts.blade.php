@@ -15,24 +15,25 @@
 
 <script>
   $(document).ready(function () {
-      $fecha = new Date();
-      $year = $fecha.getFullYear();
-      $month = $fecha.getMonth() + 1;
-      $day = $fecha.getDate();
-      $fechaNew = null;
+      var fecha = new Date();
+      var year = fecha.getFullYear();
+      var month = fecha.getMonth() + 1;
+      var day = fecha.getDate();
+      var fechaNew = null;
 
-      if ($day.toString().length == 1){
-          $fechaNew = $year + '-' + $month + '-' + "0" + $day;
-
-      } else {
-          $fechaNew = $year + '-' + $month + '-' + $day;
+      if (month.toString().length == 1){
+        month = "0" + month;
       }
+      if (day.toString().length == 1){
+        day = "0" + day;
+      }
+      fechaNew = year + '-' + month + '-' + day;
 
-      $('#fecha').val($fechaNew);
-      $('#fechaD1').val($fechaNew);
-      $('#fechaD2').val($fechaNew);
-      $('#fechaAgenda').val($fechaNew);
-      $('#fechapagoedit').val($fechaNew);
+      $('#fecha').val(fechaNew);
+      $('#fechaD1').val(fechaNew);
+      $('#fechaD2').val(fechaNew);
+      $('#fechaAgenda').val(fechaNew);
+      $('#fechapagoedit').val(fechaNew);
 
       $('#avisos-check-all').click(function () {
         if ( $(this).is(':checked') ){
@@ -213,7 +214,7 @@
   })();
 
   var visitasMap = (function () {
-    function getPointMapVisita(fecha, gestor_id) {
+    function getPointMapVisita(fecha, gestor_id, tipo_servicio_id) {
       $('#mensaje').hide();
       var loader = $('#geo-loader-ruta');
       loader.show();
@@ -234,7 +235,8 @@
         method: "POST",
         data: {
             'fecha': fecha,
-            'gestor_id': gestor_id
+            'gestor_id': gestor_id,
+            'tipo_servicio_id': tipo_servicio_id
         },
         beforeSend: function() {
 
@@ -244,9 +246,16 @@
         var json = response.puntos;
         var size = json.length;
         var latlngs = [];
+        var etiqueta = '';
         for (var i = 0; i < size; i++) {
+          if(typeof json[i].nic  !== 'undefined'){
+            etiqueta = "NIC:<b>" + json[i].nic + "</b><br>DIRECCION:<b>" + json[i].direccion + "</b><br>CLIENTE:<b>" + json[i].cliente + "</b><br>ORDEN:<b>" + json[i].orden_realizado + "</b>";
+          }else{
+            "CT:<b>" + json[i].ct + "</b><br>MT:<b>" + json[i].mt + "</b><br>DIRECCION:<b>" + json[i].direccion +  "</b><br>MEDIDOR:<b>" + json[i].medidor + "</b><br>ORDEN:<b>" + json[i].orden_realizado + "</b>"
+          }
+
           L.marker([json[i].latitud, json[i].longitud]).addTo(mapVisitas)
-            .bindPopup("NIC:<b>" + json[i].nic + "</b><br>DIRECCION:<b>" + json[i].direccion + "</b><br>CLIENTE:<b>" + json[i].cliente + "</b><br>ORDEN:<b>" + json[i].orden_realizado + "</b>");
+            .bindPopup(etiqueta);
             //.openPopup();
           if(i == 0){
             L.circle([json[i].latitud, json[i].longitud], 60, {
@@ -275,8 +284,8 @@
       });
     }
     return {
-      getPointMapVisita: function(fecha, gestor_id){
-          getPointMapVisita(fecha, gestor_id);
+      getPointMapVisita: function(fecha, gestor_id, tipo_servicio_id){
+          getPointMapVisita(fecha, gestor_id, tipo_servicio_id);
       }
     };
   })();

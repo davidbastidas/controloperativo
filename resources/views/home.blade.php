@@ -20,7 +20,6 @@
 
             <label class="sr-only">Tipo de Servicio</label>
             <select id="delegacion_filtro" class="form-control mb-2 mr-sm-2">
-                <option value="0">[Todos los Tipo de Servicio]</option>
                 @foreach ($tiposLectura as $tp)
                   <option value="{{$tp->id}}">{{$tp->nombre}}</option>
                 @endforeach
@@ -132,12 +131,13 @@
       var day = fecha.getDate();
       var fechaNew = null;
 
-      if (day.toString().length == 1){
-          fechaNew = year + '-' + month + '-' + "0" + day;
-
-      } else {
-          fechaNew = year + '-' + month + '-' + day;
+      if (month.toString().length == 1){
+        month = "0" + month;
       }
+      if (day.toString().length == 1){
+        day = "0" + day;
+      }
+      fechaNew = year + '-' + month + '-' + day;
 
       let gestor_filtro = $('#gestor_filtro').val();
       let delegacion_filtro = $('#delegacion_filtro').val();

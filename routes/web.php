@@ -139,4 +139,12 @@ Route::group(['middleware' => ['auth']], function () {
             'uses' => 'AgendaController@subirLecturasPci'
         ]
     );
+
+    //consultas de servicios
+    Route::match(['get', 'post'], '/admin/consultas/servicios',
+        [
+            'as' => 'agenda.consultas.servicios',
+            'uses' => 'AgendaController@consultaServicios'
+        ]
+    );
 });
