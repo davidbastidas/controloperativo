@@ -87,6 +87,7 @@ class AdminController extends Controller
 
         $admin = AdminTable::where('email', $email)
             ->where('password', $pass)
+            ->where('estado', 'A')
             ->get();
 
 
