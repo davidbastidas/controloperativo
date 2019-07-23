@@ -41,7 +41,6 @@
                 </div>
             </div>
         </li>
-        
         @if(\Illuminate\Support\Facades\Auth::user()->tipo_usuario == 1)
         	<li class="nav-item hand" id="reload">
 	            <a class="nav-link" href="{{route('home')}}">
@@ -76,6 +75,20 @@
                     <span class="menu-title">Carga de Lecturas</span>
                 </a>
             </li>
+            @if(\Illuminate\Support\Facades\Auth::user()->puesto == 'admin')
+              <li class="nav-item hand">
+                  <a class="nav-link" href="{{route('usuarios')}}">
+                      <i class="menu-icon mdi mdi-map"></i>
+                      <span class="menu-title">Usuarios Web</span>
+                  </a>
+              </li>
+              <li class="nav-item hand">
+                  <a class="nav-link" href="{{route('usuarioste')}}">
+                      <i class="menu-icon mdi mdi-map"></i>
+                      <span class="menu-title">Usuarios Terreno</span>
+                  </a>
+              </li>
+            @endif
         @else
             <li class="nav-item hand">
                 <a class="nav-link" href="{{route('agenda.consultas.servicios')}}">

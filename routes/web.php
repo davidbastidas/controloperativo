@@ -147,4 +147,56 @@ Route::group(['middleware' => ['auth']], function () {
             'uses' => 'AgendaController@consultaServicios'
         ]
     );
+
+    //admin Usuarios
+    Route::get('admin/usuarios', [
+        'as' => 'usuarios',
+        'uses' => 'UsuariosController@index'
+    ]);
+
+    Route::get('admin/usuarios/view/{usuario}', [
+        'as' => 'usuarios.view',
+        'uses' => 'UsuariosController@view'
+    ]);
+
+    Route::get('admin/usuarios/new', [
+        'as' => 'usuarios.new',
+        'uses' => 'UsuariosController@new'
+    ]);
+
+    Route::post('admin/usuarios/save', [
+        'as' => 'usuarios.save',
+        'uses' => 'UsuariosController@save'
+    ]);
+
+    Route::get('admin/usuarios/delete/{usuario}', [
+        'as' => 'usuarios.delete',
+        'uses' => 'UsuariosController@delete'
+    ]);
+
+    //admin Usuarios Terreno
+    Route::get('admin/usuarioste', [
+        'as' => 'usuarioste',
+        'uses' => 'UsuariosController@indexTe'
+    ]);
+
+    Route::get('admin/usuarioste/view/{usuario}', [
+        'as' => 'usuarioste.view',
+        'uses' => 'UsuariosController@viewTe'
+    ]);
+
+    Route::get('admin/usuarioste/new', [
+        'as' => 'usuarioste.new',
+        'uses' => 'UsuariosController@newTe'
+    ]);
+
+    Route::post('admin/usuarioste/save', [
+        'as' => 'usuarioste.save',
+        'uses' => 'UsuariosController@saveTe'
+    ]);
+
+    Route::get('admin/usuarioste/delete/{usuario}', [
+        'as' => 'usuarioste.delete',
+        'uses' => 'UsuariosController@deleteTe'
+    ]);
 });
