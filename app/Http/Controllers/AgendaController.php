@@ -716,7 +716,7 @@ class AgendaController extends Controller
     {
         if(isset($request->medidor_filtro) || isset($request->nic_filtro)){
           $servicios = [];
-          if(isset($request->nic_filtro)){
+          if(isset($request->nic_filtro) || isset($request->medidor_filtro) ){
             $auditorias = Auditoria::where('nic',$request->nic_filtro)->orWhere('medidor',$request->medidor_filtro)->get();
             foreach ($auditorias as $aud) {
               $fechaC = new Carbon($aud->fecha_recibido);
@@ -728,6 +728,7 @@ class AgendaController extends Controller
               $path = config('myconfig.public_fotos_auditoria')  . $filename;
               array_push($servicios, (object) array(
                                           'fecha' => $fechaC->format('d/m/Y'),
+                                          'fecha_o' => $fechaC->format('Y-m-d'),
                                           'nicct' => $aud->nic,
                                           'medidor' => $aud->medidor,
                                           'anomalia' => $anomalia,
@@ -747,6 +748,7 @@ class AgendaController extends Controller
               $path = config('myconfig.public_fotos_pci')  . $filename;
               array_push($servicios, (object) array(
                                           'fecha' => $fechaC->format('d/m/Y'),
+                                          'fecha_o' => $fechaC->format('Y-m-d'),
                                           'nicct' => 'CT: ' . $pc->ct . ' - MT: ' . $pc->mt,
                                           'medidor' => $pc->medidor,
                                           'anomalia' => $anomalia,
@@ -757,7 +759,7 @@ class AgendaController extends Controller
             }
           }
           $serviciosCollection = new Collection($servicios);
-          $servicios = $serviciosCollection->sortBy('fecha');
+          $servicios = $serviciosCollection->sortByDesc('fecha_o');
           return view('agenda.consulta', array(
                                           'nic_filtro' => $request->nic_filtro,
                                           'medidor_filtro' => $request->medidor_filtro,

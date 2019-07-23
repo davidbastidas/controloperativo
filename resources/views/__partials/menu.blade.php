@@ -41,39 +41,48 @@
                 </div>
             </div>
         </li>
-        <li class="nav-item hand" id="reload">
-            <a class="nav-link" href="{{route('home')}}">
-                <i class="menu-icon mdi mdi-television"></i>
-                <span class="menu-title">Dashboard</span>
-            </a>
-        </li>
+        
+        @if(\Illuminate\Support\Facades\Auth::user()->tipo_usuario == 1)
+        	<li class="nav-item hand" id="reload">
+	            <a class="nav-link" href="{{route('home')}}">
+	                <i class="menu-icon mdi mdi-television"></i>
+	                <span class="menu-title">Dashboard</span>
+	            </a>
+	        </li>
+            <li class="nav-item hand">
+                <a class="nav-link" href="{{route('agenda')}}">
+                    <i class="menu-icon mdi mdi-book-open-page-variant"></i>
+                    <span class="menu-title">Agenda</span>
+                </a>
+            </li>
 
-        <li class="nav-item hand">
-            <a class="nav-link" href="{{route('agenda')}}">
-                <i class="menu-icon mdi mdi-book-open-page-variant"></i>
-                <span class="menu-title">Agenda</span>
-            </a>
-        </li>
+            <li class="nav-item hand">
+                <a class="nav-link" href="{{route('mapas')}}">
+                    <i class="menu-icon mdi mdi-map"></i>
+                    <span class="menu-title">Mapa de Visitas</span>
+                </a>
+            </li>
 
-        <li class="nav-item hand">
-            <a class="nav-link" href="{{route('mapas')}}">
-                <i class="menu-icon mdi mdi-map"></i>
-                <span class="menu-title">Mapa de Visitas</span>
-            </a>
-        </li>
+            <li class="nav-item hand">
+                <a class="nav-link" href="{{route('agenda.consultas.servicios')}}">
+                    <i class="menu-icon mdi mdi-map"></i>
+                    <span class="menu-title">Consutas Generales</span>
+                </a>
+            </li>
 
-        <li class="nav-item hand">
-            <a class="nav-link" href="{{route('agenda.consultas.servicios')}}">
-                <i class="menu-icon mdi mdi-map"></i>
-                <span class="menu-title">Consutas Generales</span>
-            </a>
-        </li>
-
-        <li class="nav-item hand">
-            <a class="nav-link" href="{{route('agenda.pci.uploadlecturas')}}">
-                <i class="menu-icon mdi mdi-map"></i>
-                <span class="menu-title">Carga de Lecturas</span>
-            </a>
-        </li>
+            <li class="nav-item hand">
+                <a class="nav-link" href="{{route('agenda.pci.uploadlecturas')}}">
+                    <i class="menu-icon mdi mdi-map"></i>
+                    <span class="menu-title">Carga de Lecturas</span>
+                </a>
+            </li>
+        @else
+            <li class="nav-item hand">
+                <a class="nav-link" href="{{route('agenda.consultas.servicios')}}">
+                    <i class="menu-icon mdi mdi-map"></i>
+                    <span class="menu-title">Consutas Generales</span>
+                </a>
+            </li>
+        @endif
     </ul>
 </nav>
